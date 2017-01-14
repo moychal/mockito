@@ -192,6 +192,67 @@ public class SpyAnnotationTest extends TestBase {
         }
     }
 
+    @Test
+    public void should_report_private_inner_not_supported() throws Exception {
+        try {
+            MockitoAnnotations.initMocks(new WithInnerPrivate());
+            fail();
+        } catch (MockitoException e) {
+            // Currently fails at instantiation time, because the mock subclass don't have the
+            // 1-arg constructor expected for the outerclass.
+            // org.mockito.internal.creation.instance.ConstructorInstantiator.withParams()
+            assertThat(e).hasMessageContaining("Unable to initialize @Spy annotated field 'spy_field'")
+                         .hasMessageContaining(WithInnerPrivate.InnerPrivate.class.getSimpleName());
+        }
+    }
+
+    @Test
+    public void should_report_private_abstract_inner_not_supported() throws Exception {
+        try {
+            MockitoAnnotations.initMocks(new WithInnerPrivateAbstract());
+            fail();
+        } catch (MockitoException e) {
+            assertThat(e).hasMessageContaining("@Spy annotation can't initialize private abstract inner classes")
+                         .hasMessageContaining(WithInnerPrivateAbstract.class.getSimpleName())
+                         .hasMessageContaining(WithInnerPrivateAbstract.InnerPrivateAbstract.class.getSimpleName());
+        }
+    }
+
+    @Test
+    public void should_report_private_static_abstract_inner_not_supported() throws Exception {
+        try {
+            MockitoAnnotations.initMocks(new WithInnerPrivateStaticAbstract());
+            fail();
+        } catch (MockitoException e) {
+            assertThat(e).hasMessageContaining("@Spy annotation can't initialize private abstract inner classes")
+                         .hasMessageContaining(WithInnerPrivateStaticAbstract.class.getSimpleName())
+                         .hasMessageContaining(WithInnerPrivateStaticAbstract.InnerPrivateStaticAbstract.class.getSimpleName());
+        }
+    }
+
+    static class WithInnerPrivateStaticAbstract {
+        @Spy
+        private InnerPrivateStaticAbstract spy_field;
+
+        private static abstract class InnerPrivateStaticAbstract {
+        }
+    }
+    static class WithInnerPrivateAbstract {
+        @Spy
+        private InnerPrivateAbstract spy_field;
+
+        private abstract class InnerPrivateAbstract {
+        }
+    }
+
+    static class WithInnerPrivate {
+        @Spy
+        private InnerPrivate spy_field;
+
+        private class InnerPrivate {
+        }
+    }
+
     static class InnerStaticClassWithoutDefinedConstructor {
     }
 

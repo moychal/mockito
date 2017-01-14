@@ -68,6 +68,7 @@ public class SpyAnnotationEngine implements AnnotationEngine, org.mockito.config
                         field.set(testInstance, newSpyInstance(testInstance, field));
                     }
                 } catch (Exception e) {
+                    e.printStackTrace();
                     throw new MockitoException("Unable to initialize @Spy annotated field '" + field.getName() + "'.\n" + e.getMessage(), e);
                 }
             }
@@ -89,7 +90,13 @@ public class SpyAnnotationEngine implements AnnotationEngine, org.mockito.config
         if (type.isInterface()) {
             return Mockito.mock(type, settings.useConstructor());
         }
-        if (!Modifier.isStatic(type.getModifiers())) {
+        int modifiers = type.getModifiers();
+        if (Modifier.isPrivate(modifiers) && Modifier.isAbstract(modifiers) && type.getEnclosingClass() != null) {
+            throw new MockitoException("@Spy annotation can't initialize private abstract inner classes. "
+                                       + "Inner class: '" + type.getSimpleName() + "', "
+                                       + "outer class: '" + type.getEnclosingClass().getSimpleName() + "'.");
+        }
+        if (!Modifier.isStatic(modifiers)) {
             Class<?> enclosing = type.getEnclosingClass();
             if (enclosing != null) {
                 if (!enclosing.isInstance(testInstance)) {
