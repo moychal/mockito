@@ -16,6 +16,18 @@ import static org.junit.Assert.*;
 
 
 public class BeanPropertySetterTest {
+	
+	@Test(expected = RuntimeException.class)
+	public void throw_runtim_exception_if_setter_throws_illegal_arg_exception() throws Exception {
+		// given
+		BeanThatThrowsIllegalArgException someBean = new BeanThatThrowsIllegalArgException();
+		Field theField = someBean.getClass().getDeclaredField("theField");
+		File valueToInject = new File("fail");
+		
+		// then
+		new BeanPropertySetter(someBean, theField).set(valueToInject);
+		// throws RuntimeException
+	}
 
     @Test
     public void use_the_correct_setter_on_the_target() throws Exception {
@@ -109,6 +121,15 @@ public class BeanPropertySetterTest {
         assertFalse(injected);
     }
 
+    static class BeanThatThrowsIllegalArgException {
+    	private File theField;
+    	boolean theFieldSetterWasUsed;
+    	
+    	public void setTheField(final File theField) throws IllegalArgumentException {
+    		throw new IllegalArgumentException();
+    	}
+    }
+    
     static class SomeBean {
         private File theField;
         boolean theFieldSetterWasUsed;
